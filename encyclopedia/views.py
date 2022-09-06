@@ -26,11 +26,19 @@ def index(request):
     
 #SEARCH
 def searchbar(s):
+    list_words = []
+    i = 0 # TEST
     # CASEFOLD THE LIST AND DEVIDE IT INTO LIST OF LISTS WITH LETTERS
     letters_list = [list(map(str.casefold, x)) for x in util.list_entries()]
     for word in letters_list:
+        i += 1 # TEST
+        print(i, word) #TEST
+        entry = ''.join(word) # CONCATINATE THE STRING
+        
         if len(s) == 1:
-            if s in word:
+            if s in entry:
+                list_words.append(entry)
+                print("LIST WORDS:", list_words)
                 return(word)
 
         elif len(s) > 1:
@@ -40,12 +48,15 @@ def searchbar(s):
                 
                 if x.find(s) != -1:
                         return x
+        if len(s) == len(''.join(word)):
+            if s == ''.join(word):
+                return s
 
 
 def search(request):
     
     if request.method == 'POST':
-        searched = request.POST["q"]
+        searched = request.POST["q"].casefold()
         
         print("REQURDT METHOD:",request.method)
         print("SEARCHED:",searched)
@@ -56,11 +67,16 @@ def search(request):
         x = ''.join(searchbar(searched))
         print( "SEARCHBAR:",x )
 
+        if searched == x:
+            return render(request,"encyclopedia/entry.html",{
+                "searched": searched, "entries": x, "entry":x.upper(), "content": htmlconvert(searched)
+            })
+
+
         return render(request, "encyclopedia/search.html", {
             "searched": searched, "entries": x, "entry":x.upper()
         })
-    except TypeError:
-#else:
+    except TypeError: # TypeError raises when the search input is not valid
         return render(request, "encyclopedia/search.html", {
             "searched": searched, "entries":util.list_entries()
         })
@@ -68,8 +84,7 @@ def search(request):
 
 
 # LIST_ENTRIES :  ['CSS', 'Django', 'Git', 'HTML', 'Python']
-#def entry(request):
-#    ...
+
         
 
 
