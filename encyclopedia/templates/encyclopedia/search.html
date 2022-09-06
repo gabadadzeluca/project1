@@ -8,7 +8,9 @@
     <h2> You searched for</h2>
     {% if searched in entries %}
        Information about <b>{{entry}}</b> will soon be available
-       ADD URL ADRESS FOR AN ENTRY
+        <ul>
+            <li><a href="">{{ entry }}</a></li>
+        </ul>
     {% else %}
         Couldn't find <b>{{searched}}</b>
     {% endif %}
