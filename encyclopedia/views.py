@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from markdown2 import Markdown
 from django import forms
 
+import re
 from . import util
 
 class EntryForm(forms.Form):
@@ -27,12 +28,10 @@ def index(request):
 #SEARCH
 def searchbar(s):
     list_words = []
-    i = 0 # TEST
+
     # CASEFOLD THE LIST AND DEVIDE IT INTO LIST OF LISTS WITH LETTERS
     letters_list = [list(map(str.casefold, x)) for x in util.list_entries()]
     for word in letters_list:
-        i += 1 # TEST
-        print(i, word) #TEST
         entry = ''.join(word) # CONCATINATE THE STRING
         
         if len(s) == 1:
@@ -58,7 +57,7 @@ def search(request):
     if request.method == 'POST':
         searched = request.POST["q"].casefold()
         
-        print("REQURDT METHOD:",request.method)
+        print("REQUEST METHOD:",request.method)
         print("SEARCHED:",searched)
     try:    
        
@@ -68,8 +67,8 @@ def search(request):
         print( "SEARCHBAR:",x )
 
         if searched == x:
-            return render(request,"encyclopedia/entry.html",{
-                "searched": searched, "entries": x, "entry":x.upper(), "content": htmlconvert(searched)
+            return render(request,"encyclopedia/template.html",{
+                "searched": searched, "entries": x, "title":x.upper(), "content": htmlconvert(searched)
             })
 
 
@@ -83,10 +82,6 @@ def search(request):
 
 
 
-# LIST_ENTRIES :  ['CSS', 'Django', 'Git', 'HTML', 'Python']
-
-        
-
 
 
 def new(request):   
@@ -96,11 +91,22 @@ def new(request):
 
         title = form.cleaned_data['title']
         information = form.cleaned_data['information']
+      
+        if title not in util.list_entries():
+            util.save_entry(title,information)
+            print("Title: ",title,"Info: ",information)
+            return render(request, "encyclopedia/template.html",{
+                "content": htmlconvert(title), "title":title.upper()
+            })
+        return HttpResponse("PAGE ALREADY EXISTS") # CHANGE THIS
+    else:
+        return render(request, "encyclopedia/new.html",{
+           "form":form
             
-        print("Title",title,"Info:",information)
-    return render(request, "encyclopedia/new.html",{
-        "form":form
+        })
+
+
+def edit(request):
+    return render(request,"encyclopedia/edit.html", {
+
     })
-
-
-
