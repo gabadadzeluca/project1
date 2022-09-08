@@ -30,7 +30,6 @@ def new(request):
     form = EntryForm(request.POST)
     if request.method == "POST":
         if form.is_valid():
-
             title = form.cleaned_data['title']
             information = form.cleaned_data['information']
             print(form.cleaned_data["edit"], "FORM VALID")
@@ -96,7 +95,10 @@ def search(request):
                 "searched": searched
             })
         if util.get_entry(searched) is not None:
-            return HttpResponse(f"{searched} is in the list")
+            return render(request,"encyclopedia/entry.html",{
+                "entry": searched,
+                "content": htmlconvert(searched)
+            })
 
 
 
