@@ -1,23 +1,22 @@
-from http.client import HTTPResponse
-from typing import Type
+from cgitb import html
+from queue import Empty
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseRedirect
 from markdown2 import Markdown
 from django import forms
+from random import choice
 
-import re
 from . import util
 
 class EntryForm(forms.Form):
     title = forms.CharField(label="Title")
     information = forms.CharField(widget=forms.Textarea,label="Information")
-
+    edit = forms.BooleanField(widget=forms.HiddenInput(), initial=False, required=False)
 
 def htmlconvert(title):
     markdowner = Markdown()
     entry = util.get_entry(title)
     html = markdowner.convert(entry)
-
     return html
 
 def index(request):
@@ -25,88 +24,87 @@ def index(request):
         "entries": util.list_entries()
     })
     
-#SEARCH
-def searchbar(s):
-    list_words = []
-
-    # CASEFOLD THE LIST AND DEVIDE IT INTO LIST OF LISTS WITH LETTERS
-    letters_list = [list(map(str.casefold, x)) for x in util.list_entries()]
-    for word in letters_list:
-        entry = ''.join(word) # CONCATINATE THE STRING
-        
-        if len(s) == 1:
-            if s in entry:
-                list_words.append(entry)
-                print("LIST WORDS:", list_words)
-                return(word)
-
-        elif len(s) > 1:
-                x = ''.join(word)
-
-                print("x is ", x) # TEST, Remove later
-                
-                if x.find(s) != -1:
-                        return x
-        if len(s) == len(''.join(word)):
-            if s == ''.join(word):
-                return s
-
-
-def search(request):
-    
-    if request.method == 'POST':
-        searched = request.POST["q"].casefold()
-        
-        print("REQUEST METHOD:",request.method)
-        print("SEARCHED:",searched)
-    try:    
-       
-        #if (''.join(searchbar(searched))):
-         
-        x = ''.join(searchbar(searched))
-        print( "SEARCHBAR:",x )
-
-        if searched == x:
-            return render(request,"encyclopedia/template.html",{
-                "searched": searched, "entries": x, "title":x.upper(), "content": htmlconvert(searched)
-            })
-
-
-        return render(request, "encyclopedia/search.html", {
-            "searched": searched, "entries": x, "entry":x.upper()
-        })
-    except TypeError: # TypeError raises when the search input is not valid
-        return render(request, "encyclopedia/search.html", {
-            "searched": searched, "entries":util.list_entries()
-        })
-
 
 
 
 
 def new(request):   
-
     form = EntryForm(request.POST)
-    if form.is_valid():
+    if request.method == "POST":
+        if form.is_valid():
 
-        title = form.cleaned_data['title']
-        information = form.cleaned_data['information']
-      
-        if title not in util.list_entries():
-            util.save_entry(title,information)
-            print("Title: ",title,"Info: ",information)
-            return render(request, "encyclopedia/template.html",{
-                "content": htmlconvert(title), "title":title.upper()
-            })
-        return HttpResponse("PAGE ALREADY EXISTS") # CHANGE THIS
+            title = form.cleaned_data['title']
+            information = form.cleaned_data['information']
+            print(form.cleaned_data["edit"], "FORM VALID")
+            print("TITLE", title, "INFORMATION", information)
+            if (util.get_entry(title) is None or form.cleaned_data["edit"] is True):
+                print(form.cleaned_data['edit'])
+                util.save_entry(title,information)
+                return render(request, "encyclopedia/entry.html",{
+                    "content": htmlconvert(title), "entry": title
+                })
+
+            return HttpResponse("PAGE ALREADY EXISTS") # CHANGE THIS
     else:
         return render(request, "encyclopedia/new.html",{
-           "form":form
-            
+           "form":form,
+            "existing": False,
         })
 
 
-def edit(request):
-    return render(request,"encyclopedia/edit.html", {
+def edit(request,entry):
+    entryPage = util.get_entry(entry)
+    if entryPage is None:
+        return render(request, "encyclopedia/nonExisting.html",{
+            "entry":entry
+        })
+    else:
+        form = EntryForm()
+        form.fields["title"].initial = entry
+        form.fields["title"].widget=forms.HiddenInput()
+        form.fields["information"].initial = entryPage
+        form.fields["edit"].initial == True
+        return render(request, "encyclopedia/edit.html",{
+            "form": form,
+            "title" : form.fields["title"].initial,
+            "edit" : form.fields["edit"].initial
+       })
 
+
+def entry(request, entry):
+   
+    entryPage = util.get_entry(entry)
+    if entryPage is None:
+        return render(request,"encyclopedia/nonExisting.html",{
+            "entry":entry
+        })
+    return render(request, "encyclopedia/entry.html",{
+            "content":htmlconvert(entry), "entry":entry
+    })
+
+
+def search(request):
+    if request.method == "GET":
+        list_words = []
+        searched = request.GET.get('q')
+        if util.get_entry(searched) is None:
+            for entry in util.list_entries():
+                if searched.upper() in entry.upper():
+                    list_words.append(entry)
+                    print("LIST_LETTERS: ",list_words)
+            return render(request, "encyclopedia/search.html",{
+                "entries":list_words,
+                "entry" : entry,
+                "searched": searched
+            })
+        if util.get_entry(searched) is not None:
+            return HttpResponse(f"{searched} is in the list")
+
+
+
+def random(request):
+    entry = choice(util.list_entries())
+    return render(request, "encyclopedia/entry.html",{
+        "entry": entry,
+        "content": htmlconvert(entry)
     })

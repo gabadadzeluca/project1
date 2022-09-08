@@ -5,15 +5,14 @@
 {% endblock %}
 
 {% block body %}
-    <h2> You searched for</h2>
-    {% if searched in entries %}
-       Information about <b>{{entry}}</b> will soon be available
-        <ul>
-            <li><a href="">{{ entry }}</a></li>
-        </ul>
-    {% else %}
-        Couldn't find <b>{{searched}}</b>
-    {% endif %}
+    <h5>Results for <b><u>{{searched}}</u></b></h5>
+    <ul>
+        {% for entry in entries %}
+        <li><a href="{% url 'entry' entry %}">{{entry}}</a></li>
+        {% endfor %}
+    </ul>
+    
+        
     
     
 {% endblock %}

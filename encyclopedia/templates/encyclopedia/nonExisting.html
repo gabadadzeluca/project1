@@ -1,0 +1,13 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+    Non-existing entry
+{% endblock %}
+
+{% block body %}
+    The entry you were looking for doesn't exist.
+    You can add <b><u>{{ entry }}</u></b> to the existing entries.
+    <br>
+    <a href="{% url 'new' %}"> Create New Page</a>
+
+{% endblock %}
