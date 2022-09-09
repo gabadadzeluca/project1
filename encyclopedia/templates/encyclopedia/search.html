@@ -5,13 +5,16 @@
 {% endblock %}
 
 {% block body %}
+    {% if existing %}
     <h5>Results for <b><u>{{searched}}</u></b></h5>
     <ul>
         {% for entry in entries %}
         <li><a href="{% url 'entry' entry %}">{{entry}}</a></li>
         {% endfor %}
     </ul>
-    
+    {% else %}
+        <h5>Couldn't find <b><u>{{searched}}</u></b></h5>
+    {% endif %}
         
     
     

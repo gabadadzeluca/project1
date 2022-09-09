@@ -92,11 +92,19 @@ def search(request):
             for entry in util.list_entries():
                 if searched.upper() in entry.upper():
                     list_words.append(entry)
-                    print("LIST_LETTERS: ",list_words)
+            
+            if len(list_words) == 0:
+                return render(request, "encyclopedia/search.html",{
+                    "entries": list_words,
+                    "entry":entry,
+                    "searched":searched,
+                    "existing": False
+                })
             return render(request, "encyclopedia/search.html",{
                 "entries":list_words,
                 "entry" : entry,
-                "searched": searched
+                "searched": searched,
+                "existing": True
             })
         if util.get_entry(searched) is not None:
             return render(request,"encyclopedia/entry.html",{
