@@ -1,3 +1,4 @@
+from audioop import reverse
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
 from markdown2 import Markdown
@@ -27,30 +28,34 @@ def index(request):
 
 
 def new(request):   
-    form = EntryForm(request.POST)
     if request.method == "POST":
+        form = EntryForm(request.POST)
         if form.is_valid():
             title = form.cleaned_data['title']
             information = form.cleaned_data['information']
-            print(form.cleaned_data["edit"], "FORM VALID")
-            print("TITLE", title, "INFORMATION", information)
             if (util.get_entry(title) is None or form.cleaned_data["edit"] is True):
-                print(form.cleaned_data['edit'])
                 util.save_entry(title,information)
                 return render(request, "encyclopedia/entry.html",{
-                    "content": htmlconvert(title), "entry": title
+                    "content": htmlconvert(title), "entry": title,
+                    
                 })
+            # IF THE PAGE EXISTS ALREADY
+            return render(request,"encyclopedia/entry.html",{
+                "entry":title,
+                "message":"Page Already Exists, press the button to Edit",
+                "existing":True
 
-            return HttpResponse("PAGE ALREADY EXISTS") # CHANGE THIS
+            })
     else:
         return render(request, "encyclopedia/new.html",{
-           "form":form,
-            "existing": False,
+            "form":EntryForm(),
+            #"existing": False,
         })
 
 
 def edit(request,entry):
     entryPage = util.get_entry(entry)
+   
     if entryPage is None:
         return render(request, "encyclopedia/nonExisting.html",{
             "entry":entry
@@ -60,7 +65,7 @@ def edit(request,entry):
         form.fields["title"].initial = entry
         form.fields["title"].widget=forms.HiddenInput()
         form.fields["information"].initial = entryPage
-        form.fields["edit"].initial == True
+        form.fields["edit"].initial = True
         return render(request, "encyclopedia/edit.html",{
             "form": form,
             "title" : form.fields["title"].initial,

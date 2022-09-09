@@ -5,10 +5,10 @@
 {% endblock %}
 
 {% block body %}
-    <form method="post">
+    <form method="post" action="{% url 'new' %}">
         {% csrf_token %}
         {{ form }}
-        <input type="submit" value="Save">
+        <input type="submit" value="Save" style="background-color: rgb(79, 177, 215);padding:5px 15px; color:white; text-align: center; font-family:sans-serif;">
     </form>
     
     
